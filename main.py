@@ -1,21 +1,27 @@
 ## addonsync ##
 ## syncronize wow addons from curse.com/wow based on URL ##
 
-import urllib2
-import lxml
-from bs4 import BeautifulSoup
+import os
+import requests
 import sqlite3
 import re
 
 ## TODO:
 ## add a new addon and auto-download/index (based on name)
 ## sqlitedb to keep track of updates and versions
-## 
 
-addons_dir = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns"
+## - Wrapper for ensuring directory creation if necessary ??
+## - Time-delay to prevent curse.com from detecting automation and blocking
 
-addon_template = "http://www.curse.com/addons/wow/"
+## Target directory
+# addons_dir = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns"
+addons_dir = "/home/curtis/Desktop/Addons/"
 
+## base url where addons are found
+addon_base_url = "http://www.curse.com/addons/wow/"
+
+## Temporary hard-coded list of addons
+## this will be later read from a config-file/DB
 addon_links = [
     "http://www.curse.com/addons/wow/omni-cc/download"
     "http://www.curse.com/addons/wow/tidy-plates/download"
@@ -26,88 +32,94 @@ addon_links = [
     "http://www.curse.com/addons/wow/tip-tac/download"
     "http://www.wowinterface.com/downloads/download21377-PlateBuff-Mop"]
 
+## Temporary location to save addons into
+## TODO: Why?
 addon_temp_dir = "/home/curtis/.addonsync"
 temp_dir = "/tmp/"
+
+## Database for tracking updates and changes
 addon_db = "/home/curtis/Code/Python/addonsync/addon.db"
 
 ## add tables to DB unless they already exists
-conn = sqlite3.connect(addon_db)
+# conn = sqlite3.connect(addon_db)
 
 ## what we should do is parse the pages for the addons to get either
 ## their updated date, or their version number, and compare with our
 ## own records. if we have an addon that needs updating, download and
 ## extract to addons directory
 
-class AddonPage(object):
+class Addon(object):
     """
-    """
-    
-    def __init__(self, URL):
-        """
-        
-        Arguments:
-        - `URL`: string or URL???
-        """
-        self._URL = URL
-
-
-class Addon(BeautifulSoup):
-    """ Represents an addon.
     """
     
     def __init__(self, name):
         """
+        
         Arguments:
-        - `name`: name of the addon
+        - `name`:
         """
         self.name = name
-        self._url = urllib2.urlopen(addon_template + name)
-        BeautifulSoup.__init__(self, self._url) # initialize parent class
 
+        # the addon has a 'homepage' as well as a download page
+        self.url = addon_base_url + self.name + "/"
+        self.download_url = self.url + "download/"
 
-    def downloadAddon(self):
-        """ Download the addon zip.
+        # where to save the file
+        # TODO: versioning? tmpfile?
+        self.zip_file = addons_dir + self.name
+
+    def matchVersion(self):
         """
-        download_url = addon_template + name + "/download"
-        download_url = urllib2.urlopen(download_url)
-        download_soup = BeautifulSoup(download_url)
+        Figure out current version of an addon.
 
-        ## no guarentee this will work every time. should do a search for tags with data-href in them
-        file_url = download_soup.p.a['data-href']
-        target_file = addon_temp_dir + "/" + self.name
-
-        ## download the file
-        urllib2.urlretrieve(file_url, target_file)
-        
-        
-    def addonVersion(self):
-        """ Check the version of the addon
+        Arguments:
+        - `self`:
         """
-        
+        True
 
-    def indexAddon(self):
-        """ update information about the addon in the db.
+    def matchZipFile(self):
         """
-        print "test"
+        Parse a webpage looking for a zipfile for an addon.
+        
+        Return the URL if a file is found, or False if not.
 
+        Arguments:
+        - `self`: 
+        """
 
+        ms = "http://addons\.curse\.cursecdn\.com/files/.*\.zip"
+        page = requests.get(self.download_url)
 
-## page = urllib2.urlopen("http://www.curse.com/addons/wow/omni-cc/")
-soup = Addon("omni-cc")
-## testpage = BeautifulSoup(open("/home/curtis/Code/Python/addonsync/resources/download"))
+        fa = re.findall(ms, page.text)
+        if fa:
+            return fa[0]
+        else:
+            return False
 
+    def getFile(self):
+        """
+        Download the file to a target dir
+        
+        Arguments:
+        - `self`:
+        """
+        zipfile = self.matchZipFile()
+        if zipfile:
+            
+            file_stream = requests.get(zipfile, stream = True)
 
-def findversion(soup):
-    """
-    """
-    uls = soup.find_all('ul')
-    for l in uls:
-        for li in l.find_all("li"):
-            if li['class'] == "details-list":
-                li.string
-
+            with open(self.zip_file, 'wb') as f:
+                for chunk in file_stream.iter_content(chunk_size = 1024):
+                    if chunk:
+                        f.write(chunk)
+                        f.flush()
+        else:
+            # error
+            print("Unable to find file for %s" % self.name)
 
     
+            
+
 
 
 # ## NOTES ##
@@ -142,4 +154,6 @@ def findversion(soup):
 # </div>
 
 # ## DOWNLOAD
-# <p>If your download doesn't begin <a class="download-link" data-file="693805" data-href="http://addons.curse.cursecdn.com/files/693/805/OmniCC_5.2.3.zip" data-project="2057" href="#">click here</a>.</p>
+file_string = ' <p>If your download doesnt begin <a class="download-link" data-file="693805" data-href="http://addons.curse.cursecdn.com/files/693/805/OmniCC_5.2.3.zip" data-project="2057" href="#">click here</a>.</p>'
+
+
