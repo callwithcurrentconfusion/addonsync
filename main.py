@@ -7,18 +7,14 @@ import sqlite3
 import re
 
 ## TODO:
-## add a new addon and auto-download/index (based on name)
-## sqlitedb to keep track of updates and versions
-
+## - sqlitedb to keep track of updates and versions
 ## - Wrapper for ensuring directory creation if necessary ??
 ## - Time-delay to prevent curse.com from detecting automation and blocking
+## - unzipping of file, and copying to addon file.
 
 ## Target directory
 # addons_dir = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns"
 addons_dir = "/home/curtis/Desktop/Addons/"
-
-## base url where addons are found
-addon_base_url = "http://www.curse.com/addons/wow/"
 
 ## Temporary hard-coded list of addons
 ## this will be later read from a config-file/DB
@@ -47,79 +43,6 @@ addon_db = "/home/curtis/Code/Python/addonsync/addon.db"
 ## their updated date, or their version number, and compare with our
 ## own records. if we have an addon that needs updating, download and
 ## extract to addons directory
-
-class Addon(object):
-    """
-    """
-    
-    def __init__(self, name):
-        """
-        
-        Arguments:
-        - `name`:
-        """
-        self.name = name
-
-        # the addon has a 'homepage' as well as a download page
-        self.url = addon_base_url + self.name + "/"
-        self.download_url = self.url + "download/"
-
-        # where to save the file
-        # TODO: versioning? tmpfile?
-        self.zip_file = addons_dir + self.name
-
-    def matchVersion(self):
-        """
-        Figure out current version of an addon.
-
-        Arguments:
-        - `self`:
-        """
-        True
-
-    def matchZipFile(self):
-        """
-        Parse a webpage looking for a zipfile for an addon.
-        
-        Return the URL if a file is found, or False if not.
-
-        Arguments:
-        - `self`: 
-        """
-
-        ms = "http://addons\.curse\.cursecdn\.com/files/.*\.zip"
-        page = requests.get(self.download_url)
-
-        fa = re.findall(ms, page.text)
-        if fa:
-            return fa[0]
-        else:
-            return False
-
-    def getFile(self):
-        """
-        Download the file to a target dir
-        
-        Arguments:
-        - `self`:
-        """
-        zipfile = self.matchZipFile()
-        if zipfile:
-            
-            file_stream = requests.get(zipfile, stream = True)
-
-            with open(self.zip_file, 'wb') as f:
-                for chunk in file_stream.iter_content(chunk_size = 1024):
-                    if chunk:
-                        f.write(chunk)
-                        f.flush()
-        else:
-            # error
-            print("Unable to find file for %s" % self.name)
-
-    
-            
-
 
 
 # ## NOTES ##
