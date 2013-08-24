@@ -1,6 +1,7 @@
 import requests
 import re
 import zipfile
+import json
 
 def find_on_page(url, ms):
     """
@@ -45,7 +46,7 @@ class Addon(object):
     """
     """
     
-    def __init__(self, name, newest_file=None, installed=False):
+    def __init__(self, name, newest_file=None, installed=False, files="[]"):
         """
         
         Arguments:
@@ -54,6 +55,7 @@ class Addon(object):
         self.name = name
         self.newest_file = newest_file
         self.installed = installed
+        self.files = json.loads(files)
 
         # the addon has a 'homepage' as well as a download page
         addon_base_url = "http://www.curse.com/addons/wow/"
@@ -123,7 +125,7 @@ class Addon(object):
     def unzipFile(self, target_dir):
         """
         Extract the contents of our zipfile into the target directory.
-        
+        TODO: for each file we extract, add it + path to self.files
         Arguments:
         - `self`:
         """

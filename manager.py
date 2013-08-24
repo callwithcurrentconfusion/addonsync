@@ -4,6 +4,7 @@
 import os
 import sqlite3 as db
 from addon import Addon
+import json
 
 ## TODO:
 ## - Wrapper for ensuring directory creation if necessary ??
@@ -69,18 +70,25 @@ class Manager(object):
         if addon.installed:
             #update... assume new version number only
             with self.conn:
-                self.conn.execute("UPDATE addons SET version=? WHERE name=?;",\
-                                  (addon.newest_file, addon.name, ))
+                # print debugging
+                print("Updating record for %s." % addon.name)
+                print("Version -> %s" % addon.newest_file)
+                print("Files extracted -> %s" % json.dumps(addon.files))
+                self.conn.execute("UPDATE addons SET version=?,files=? WHERE name=?;",\
+                                  (addon.newest_file, json.dumps(addon.files), addon.name, ))
             
         else:
             # add new
             # TODO: better naming of tmp/zipfile (should end with .zip)
             tmpfile = self.temp_dir + addon.name + ".zip"
             if addon.getFile(tmpfile) and addon.unzipFile(self.addons_dir):
-                addon.newest_file = addon.updateAvailable
+                addon.newest_file = addon.updateAvailable()
                 with self.conn:
-                    self.conn.execute("INSERT INTO addons VALUES (?, ?, ?)",\
-                                      (addon.name, addon.newest_file, True, ))
+                    print("Adding record for %s." % addon.name)
+                    print("Version -> %s" % addon.newest_file)
+                    print("Files extracted -> %s" % json.dumps(addon.files))
+                    self.conn.execute("INSERT INTO addons VALUES (?, ?, ?, ?)",\
+                                      (addon.name, addon.newest_file, True, json.dumps(addon.files), ))
 
 
     def updateAddons(self):
@@ -111,6 +119,7 @@ class Manager(object):
                     
                 else:
                     print("%s is up to date." % addon.name)
+                    
 
     def listInstalledAddons(self):
         """
@@ -123,7 +132,9 @@ class Manager(object):
             installed_addons = self.conn.execute("SELECT * FROM addons;")
             for addon in installed_addons:
                 addon = Addon(*addon)
-                print("%s - version: %s" % (addon.name, addon.newest_file))
+                print("%s - version: %s - files: %s" % \
+                      (addon.name,\ addon.newest_file, json.dumps(addon.files)))
+                
 
     def uninstallAddon(self, addon):
         """
