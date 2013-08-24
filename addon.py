@@ -81,7 +81,7 @@ class Addon(object):
 
         if available_version:
             if newer_version(available_version, self.newest_file):
-                print(available_version)
+                print("Current available version of %s: %s." % (self.name, available_version))
                 return available_version
             else:
                 return False
@@ -104,7 +104,8 @@ class Addon(object):
         if z:
             
             file_stream = requests.get(z, stream = True)
-
+            
+            print("Downloading %s" % z)
             with open(target_file, 'wb') as f:
                 for chunk in file_stream.iter_content(chunk_size = 1024):
                     if chunk:
@@ -126,8 +127,6 @@ class Addon(object):
         """
         Extract the contents of our zipfile into the target directory.
 
-        TODO: merge/flatten lists?
-
         Arguments:
         - `self`:
         """
@@ -139,8 +138,9 @@ class Addon(object):
         # TODO: try/except here, validation of file contents
         #  to prevent traversal exploits
         for name in self.zipfile.namelist():
-            self.files.append(name)
-            
+            self.files.append(target_dir + name)
+
+        print("Extracting zipfile to %s." % target_dir)
         self.zipfile.extractall(target_dir)
         return True
 

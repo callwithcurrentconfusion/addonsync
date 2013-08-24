@@ -8,12 +8,14 @@ import json
 import shutil
 
 ## TODO:
-## - Wrapper for ensuring directory creation if necessary ??
+
 ## - Time-delay to prevent curse.com from detecting automation and blocking
 ## - cache for downloads (prevent too much downloading).
 ## - threading (help with net and file io bottlenecks).
-## - UNZIPPING: UNZIP FILE ITERATIVELY, AND INDEX EVERYTHING WE EXTRACT
-## -  NOTE: currently fetching out a cursor type. need to fetch the list and tuple off of it.
+## - automatic tmpfile locations
+## - configfile/prompt for wow-addon folder?
+## - INSTALL/DELET ADDON BY NAME OR OBJECT
+## - BETTER FILE INDEXING (ONLY INDEX ROOT FOLDERS THAT END UP AT THE TOP OF ADDONS FOLDER
 
 ## TESTING:
 ## - version / updating
@@ -113,7 +115,7 @@ class Manager(object):
                 # to record.
                 print("Checking for updates to %s" % addon.name)
                 available_version = addon.updateAvailable()
-                if available_version or not addon.installed:
+                if available_version and addon.installed:
                     addon.newest_file = available_version
                     print("Upate available, installing %s." % addon.name)
                     self.installAddon(addon)
@@ -157,6 +159,10 @@ class Manager(object):
     def uninstallAddon(self, name):
         """
         Uninstall an Addon.
+
+        TODO: better deletion. WE should be able to just index the "root" folder(s)
+        for a given addon and shutil.rmtree those. No need to index every subfolder
+        and file.
         
         Arguments:
         - `self`:
@@ -164,14 +170,16 @@ class Manager(object):
         """
         addon = self.selectAddon(name)
         if addon:
-
             # get user confirmation
-            print("Uninstalling %s." % addon.name)
+            print("Uninstalling %s." % addon.name)            
             for p in addon.files:
-                if os.path.exists(p):
-                    print("Deleting %s." % p)
+                if os.path.isfile(p):
+                    os.remove(p)
+                elif os.path.isdir(p):
                     shutil.rmtree(p)
-
+                else:
+                    print("WARNING: Unable to remove %s" % p)
+                    
             # assume files removed
             # TODO: keep record for statistical purposes.
             with self.conn:
@@ -181,7 +189,7 @@ class Manager(object):
         
 
         
-
+M = Manager()
 
     
 
