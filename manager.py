@@ -5,14 +5,15 @@ import os
 import sqlite3 as db
 from addon import Addon
 import json
+import shutil
 
 ## TODO:
 ## - Wrapper for ensuring directory creation if necessary ??
 ## - Time-delay to prevent curse.com from detecting automation and blocking
 ## - cache for downloads (prevent too much downloading).
 ## - threading (help with net and file io bottlenecks).
-## - Logging/Printing output for debugging.
-## - VERSION CHECKING
+## - UNZIPPING: UNZIP FILE ITERATIVELY, AND INDEX EVERYTHING WE EXTRACT
+## -  NOTE: currently fetching out a cursor type. need to fetch the list and tuple off of it.
 
 ## TESTING:
 ## - version / updating
@@ -132,11 +133,28 @@ class Manager(object):
             installed_addons = self.conn.execute("SELECT * FROM addons;")
             for addon in installed_addons:
                 addon = Addon(*addon)
-                print("%s - version: %s - files: %s" % \
-                      (addon.name,\ addon.newest_file, json.dumps(addon.files)))
-                
+                print("%s - version: %s - installed: %s" % (addon.name, addon.newest_file, addon.installed))
 
-    def uninstallAddon(self, addon):
+    def selectAddon(self, name):
+        """
+        Lookup and return an addon from the db by name. 
+        Arguments:
+        - `self`:
+        - `name`:
+        """
+        with self.conn:
+            addon = self.conn.execute("SELECT * FROM addons WHERE name=?",\
+                                      (name, ))
+            if addon:
+                
+                return Addon(*addon.fetchone())
+                
+            else:
+                print("Couldn't find an addon named %s." % name)
+                return False
+
+
+    def uninstallAddon(self, name):
         """
         Uninstall an Addon.
         
@@ -144,7 +162,21 @@ class Manager(object):
         - `self`:
         - `addon`:
         """
-        print("Manually do this for now :)")
+        addon = self.selectAddon(name)
+        if addon:
+
+            # get user confirmation
+            print("Uninstalling %s." % addon.name)
+            for p in addon.files:
+                if os.path.exists(p):
+                    print("Deleting %s." % p)
+                    shutil.rmtree(p)
+
+            # assume files removed
+            # TODO: keep record for statistical purposes.
+            with self.conn:
+                self.conn.execute("UPDATE addons SET downloaded=?,files=? WHERE name=?;",\
+                                      (False, json.dumps([]), addon.name, ))
 
         
 

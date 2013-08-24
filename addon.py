@@ -125,7 +125,9 @@ class Addon(object):
     def unzipFile(self, target_dir):
         """
         Extract the contents of our zipfile into the target directory.
-        TODO: for each file we extract, add it + path to self.files
+
+        TODO: merge/flatten lists?
+
         Arguments:
         - `self`:
         """
@@ -136,9 +138,30 @@ class Addon(object):
 
         # TODO: try/except here, validation of file contents
         #  to prevent traversal exploits
+        for name in self.zipfile.namelist():
+            self.files.append(name)
+            
         self.zipfile.extractall(target_dir)
         return True
 
     
 
-quartz = Addon("quartz")    
+# quartz = Addon("quartz")    
+
+# def test_extract(zfile, target_dir):
+#     """
+    
+#     Arguments:
+#     - `zfile`:
+#     """
+    
+
+#     for name in zfile.namelist():
+#         (dirname, filename) = os.path.split(name)
+#         dirname = target_dir + dirname
+#         print "Decompressing " + filename + " on " + dirname
+#         if not os.path.exists(dirname):
+#             os.mkdir(dirname)
+#             fd = open(name,"w")
+#             fd.write(zfile.read(name))
+#             fd.close()
