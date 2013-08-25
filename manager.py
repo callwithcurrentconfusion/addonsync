@@ -15,8 +15,7 @@ import shutil
 ## - threading (help with net and file io bottlenecks).
 ## - automatic tmpfile locations
 ## - configfile/prompt for wow-addon folder?
-## - INSTALL/DELET ADDON BY NAME OR OBJECT
-## - no duplicate enteries in DB (install check checks installed flag only, and adds redudant db entries.)
+## - Smarter comparison of verion numbers during update
 
 
 ## TESTING:

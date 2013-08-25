@@ -37,10 +37,30 @@ def newer_version(available_version, current_version):
     # return True
     if available_version and not current_version:
         return True
-    elif available_version > current_version:
-        return True
-    else:
+
+    try:
+        # some version will not use a dot convention.
+        available_modes = available_version.split(".")
+        current_modes = current_version.split(".")
+
+        # compare each revision:
+        # version 6.4.0 -> [6,4,0] against
+        # vession 6.3.1 -> [6,3,1]
+        # -> 6/6 -> 4/3 -> TRUE
+        for (x,y) in zip(available_modes, current_modes):
+
+            if x > y:
+                return True
+            elif y > x:
+                return False
+                
         return False
+    except:
+        print("Unable to compare versions intelligentlly")
+        print("Manually update?")
+        # TODO Prompt here
+        print("Defaulting to bad logic guess.")
+        return available_version > current_version
     
 
 
@@ -74,6 +94,8 @@ class Addon(object):
 
         Return false if there is no newer version available, or we
         fail to get a version for this addon.
+
+        TODO: better logic for comparing versions.
 
         Arguments:
         - `self`:
