@@ -1,3 +1,5 @@
+
+
 import requests
 import re
 import zipfile
@@ -76,6 +78,9 @@ class Addon(object):
         Arguments:
         - `self`:
         """
+        
+        print("Checking for updates to %s" % addon.name)
+        
         ms = "Newest File: ([0-9\.]+)"
         available_version = find_on_page(self.url, ms)
 
@@ -144,7 +149,9 @@ class Addon(object):
         self.zipfile.extractall(target_dir)
         return True
 
-    
+
+test_tmp = "/tmp/addonsync/"
+test_addonfolder = "/home/curtis/Desktop/Addons/"
 
 # quartz = Addon("quartz")    
 

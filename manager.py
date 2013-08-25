@@ -7,6 +7,7 @@ from addon import Addon
 import json
 import shutil
 
+
 ## TODO:
 
 ## - Time-delay to prevent curse.com from detecting automation and blocking
@@ -15,7 +16,8 @@ import shutil
 ## - automatic tmpfile locations
 ## - configfile/prompt for wow-addon folder?
 ## - INSTALL/DELET ADDON BY NAME OR OBJECT
-## - BETTER FILE INDEXING (ONLY INDEX ROOT FOLDERS THAT END UP AT THE TOP OF ADDONS FOLDER
+## - no duplicate enteries in DB (install check checks installed flag only, and adds redudant db entries.)
+
 
 ## TESTING:
 ## - version / updating
@@ -67,8 +69,11 @@ class Manager(object):
         
         Arguments:
         - `self`:
-        - `addon`:
+        - `addon`: Addon or String
         """
+
+        if isinstance(addon, str):
+            addon = Addon(addon)
 
         if addon.installed:
             #update... assume new version number only
@@ -113,7 +118,7 @@ class Manager(object):
                 # if the addon isn't installed at all, we will
                 # still use the version fetched by this function
                 # to record.
-                print("Checking for updates to %s" % addon.name)
+
                 available_version = addon.updateAvailable()
                 if available_version and addon.installed:
                     addon.newest_file = available_version
@@ -144,6 +149,7 @@ class Manager(object):
         - `self`:
         - `name`:
         """
+        
         with self.conn:
             addon = self.conn.execute("SELECT * FROM addons WHERE name=?",\
                                       (name, ))
@@ -156,7 +162,7 @@ class Manager(object):
                 return False
 
 
-    def uninstallAddon(self, name):
+    def uninstallAddon(self, addon):
         """
         Uninstall an Addon.
 
@@ -168,14 +174,18 @@ class Manager(object):
         - `self`:
         - `addon`:
         """
-        addon = self.selectAddon(name)
+        if isinstance(addon, str):
+            addon = self.selectAddon(addon)
+            
         if addon:
             # get user confirmation
             print("Uninstalling %s." % addon.name)            
             for p in addon.files:
                 if os.path.isfile(p):
+                    print("deleting %s" % p)
                     os.remove(p)
                 elif os.path.isdir(p):
+                    print("deleting %s" % p)
                     shutil.rmtree(p)
                 else:
                     print("WARNING: Unable to remove %s" % p)
