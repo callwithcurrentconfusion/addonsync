@@ -172,25 +172,3 @@ class Addon(object):
         return True
 
 
-test_tmp = "/tmp/addonsync/"
-test_addonfolder = "/home/curtis/Desktop/Addons/"
-
-# quartz = Addon("quartz")    
-
-# def test_extract(zfile, target_dir):
-#     """
-    
-#     Arguments:
-#     - `zfile`:
-#     """
-    
-
-#     for name in zfile.namelist():
-#         (dirname, filename) = os.path.split(name)
-#         dirname = target_dir + dirname
-#         print "Decompressing " + filename + " on " + dirname
-#         if not os.path.exists(dirname):
-#             os.mkdir(dirname)
-#             fd = open(name,"w")
-#             fd.write(zfile.read(name))
-#             fd.close()

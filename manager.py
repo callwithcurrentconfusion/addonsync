@@ -13,44 +13,25 @@ import shutil
 ## - Time-delay to prevent curse.com from detecting automation and blocking
 ## - cache for downloads (prevent too much downloading).
 ## - threading (help with net and file io bottlenecks).
-## - automatic tmpfile locations
 ## - configfile/prompt for wow-addon folder?
-## - Smarter comparison of verion numbers during update
+## - TEMPFILE FOR DOWNLOADED ZIPS
 
 
 ## TESTING:
-## - version / updating
 ## - failure on invalid item name, bad url, no file, etc..
-## - nested files (addon packs).
-
-## Target directory
-# addons_dir = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns"
-
-
-## Temporary hard-coded list of addons
-## this will be later read from a config-file/DB
-addon_links = [
-    "http://www.curse.com/addons/wow/omni-cc/download"
-    "http://www.curse.com/addons/wow/tidy-plates/download"
-    "http://www.curse.com/addons/wow/battlegroundtargets/download"
-    "http://www.curse.com/addons/wow/quartz/download"
-    "http://www.curse.com/addons/wow/reforgelite/download"
-    "http://www.curse.com/addons/wow/gladius/download"
-    "http://www.curse.com/addons/wow/tip-tac/download"
-    "http://www.wowinterface.com/downloads/download21377-PlateBuff-Mop"]
 
 class Manager(object):
     """
     Handles the updating and installation of Addons.
     """
     
-    def __init__(self, ):
+    def __init__(self, addons_dir="/home/curtis/Desktop/Addons/"):
         """
         """
 
         ## file locations
         ## TODO: argument pass this?
-        self.addons_dir = "/home/curtis/Desktop/Addons/"
+        self.addons_dir = addons_dir
         self.temp_dir = "/tmp/addonsync/"
 
         for i in [self.addons_dir, self.temp_dir]:
@@ -203,10 +184,6 @@ class Manager(object):
                 self.conn.execute("UPDATE addons SET downloaded=?,files=? WHERE name=?;",\
                                       (False, json.dumps([]), addon.name, ))
 
-        
-
-        
-M = Manager()
 
     
 
