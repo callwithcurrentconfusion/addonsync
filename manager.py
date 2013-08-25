@@ -75,29 +75,37 @@ class Manager(object):
         if isinstance(addon, str):
             addon = Addon(addon)
 
-        if addon.installed:
-            #update... assume new version number only
-            with self.conn:
-                # print debugging
-                print("Updating record for %s." % addon.name)
-                print("Version -> %s" % addon.newest_file)
-                print("Files extracted -> %s" % json.dumps(addon.files))
-                self.conn.execute("UPDATE addons SET version=?,files=? WHERE name=?;",\
-                                  (addon.newest_file, json.dumps(addon.files), addon.name, ))
-            
-        else:
-            # add new
-            # TODO: better naming of tmp/zipfile (should end with .zip)
-            tmpfile = self.temp_dir + addon.name + ".zip"
-            if addon.getFile(tmpfile) and addon.unzipFile(self.addons_dir):
-                addon.newest_file = addon.updateAvailable()
-                with self.conn:
-                    print("Adding record for %s." % addon.name)
-                    print("Version -> %s" % addon.newest_file)
-                    print("Files extracted -> %s" % json.dumps(addon.files))
-                    self.conn.execute("INSERT INTO addons VALUES (?, ?, ?, ?)",\
-                                      (addon.name, addon.newest_file, True, json.dumps(addon.files), ))
+        # check if item is already in the DB
+        with self.conn:
+            in_db = self.conn.execute("SELECT name FROM addons WHERE name=?",\
+                                      (addon.name, ))
 
+            if not addon.installed and not in_db.fetchone():
+                # add new
+                # TODO: better naming of tmp/zipfile (should end with .zip)
+                tmpfile = self.temp_dir + addon.name + ".zip"
+                if addon.getFile(tmpfile) and addon.unzipFile(self.addons_dir):
+                    addon.newest_file = addon.updateAvailable()
+                    with self.conn:
+                        # print debugging
+                        print("Adding record for %s." % addon.name)
+                        print("Version -> %s" % addon.newest_file)
+                        print("Files extracted -> %s" % json.dumps(addon.files))
+                        self.conn.execute("INSERT INTO addons VALUES (?, ?, ?, ?)",\
+                                          (addon.name, addon.newest_file, True, json.dumps(addon.files), ))
+
+            else:
+                #update... assume new version number and files only
+                tmpfile = self.temp_dir + addon.name + ".zip"
+                if addon.getFile(tmpfile) and addon.unzipFile(self.addons_dir):
+                    addon.newest_file = addon.updateAvailable()
+                    with self.conn:
+                        # print debugging
+                        print("Updating record for %s." % addon.name)
+                        print("Version -> %s" % addon.newest_file)
+                        print("Files extracted -> %s" % json.dumps(addon.files))
+                        self.conn.execute("UPDATE addons SET version=?,files=?,downloaded=? WHERE name=?;",\
+                                          (addon.newest_file, json.dumps(addon.files), True, addon.name, ))
 
     def updateAddons(self):
         """

@@ -79,7 +79,7 @@ class Addon(object):
         - `self`:
         """
         
-        print("Checking for updates to %s" % addon.name)
+        print("Checking for updates to %s" % self.name)
         
         ms = "Newest File: ([0-9\.]+)"
         available_version = find_on_page(self.url, ms)
