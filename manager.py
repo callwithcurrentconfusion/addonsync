@@ -7,6 +7,7 @@ import sqlite3 as db
 from addon import Addon
 import json
 import shutil
+from platform import system
 
 
 ## TODO:
@@ -15,30 +16,41 @@ import shutil
 ## - cache for downloads (prevent too much downloading).
 ## - threading (help with net and file io bottlenecks).
 ## - configfile/prompt for wow-addon folder?
-## - TEMPFILE FOR DOWNLOADED ZIPS
-
+## - Verbose output
+## - More information stored in DB (number of installs, date installed, date of update...)
 
 ## TESTING:
 ## - failure on invalid item name, bad url, no file, etc..
+
+
+## CHANGEME - This value controls where your addons will be installed.
+## For linux users, edit appropriately
+addon_folder = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns"
 
 class Manager(object):
     """
     Handles the updating and installation of Addons.
     """
     
-    def __init__(self, addons_dir="/home/curtis/Desktop/Addons/"):
+    def __init__(self, addons_dir=None):
         """
         """
 
         ## file locations
-        ## TODO: argument pass this?
-        self.addons_dir = addons_dir
-        self.temp_dir = "/tmp/addonsync/"
+        s = system()
 
-        for i in [self.addons_dir, self.temp_dir]:
-            if not os.path.isdir(i):
-                os.mkdir(i)
-                
+        if addons_dir:
+            self.addons_dir = addons_dir
+        elif s == 'Linux':
+            self.addons_dir = addon_folder
+        elif s == 'Windows':
+            self.addons_dir = "C:\Program Files (x86)\World of Warcraft\Interface\AddOns"
+        elif s == 'Darwin':
+            print("Ur a fagit!")
+            raise FagitExceptionError()
+
+        if not os.path.isdir(self.addons_dir):
+            raise AddonFolderNotFound("Addon directory not found!")
 
         ## connect to DB
         self.db = "/home/curtis/Code/Python/addonsync/addon.db"
@@ -65,7 +77,7 @@ class Manager(object):
                 # add new
                 # TODO: better naming of tmp/zipfile (should end with .zip)
                 tmpfile = self.temp_dir + addon.name + ".zip"
-                if addon.getFile(tmpfile) and addon.unzipFile(self.addons_dir):
+                if addon.getFile() and addon.unzipFile(self.addons_dir):
                     addon.newest_file = addon.updateAvailable()
                     with self.conn:
                         # print debugging
@@ -78,7 +90,7 @@ class Manager(object):
             else:
                 #update... assume new version number and files only
                 tmpfile = self.temp_dir + addon.name + ".zip"
-                if addon.getFile(tmpfile) and addon.unzipFile(self.addons_dir):
+                if addon.getFile() and addon.unzipFile(self.addons_dir):
                     addon.newest_file = addon.updateAvailable()
                     with self.conn:
                         # print debugging
@@ -188,6 +200,32 @@ class Manager(object):
 
     
 
+class AddonFolderNotFound(Exception):
+    """
+    """
+    
+    def __init__(self, value):
+        """
+        """
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+class FagitExceptionError(Exception):
+    """
+    """
+    
+    def __init__(self, value):
+        """
+        
+        Arguments:
+        - `value`:
+        """
+        self.value = value
+        
+    def __str__(self):
+        return repr(self.value)
         
 
         
