@@ -1,9 +1,10 @@
-
+#!PROJECT!addonsync
 
 import requests
 import re
 import zipfile
 import json
+import tempfile
 
 def find_on_page(url, ms):
     """
@@ -118,7 +119,7 @@ class Addon(object):
             return False
 
 
-    def getFile(self, target_file):
+    def getFile(self):
         """
         Parse a webpage looking for a zipfile for an addon.
         If a file is found, download it. Else Fail.
@@ -129,18 +130,24 @@ class Addon(object):
         ms = "http://addons\.curse\.cursecdn\.com/files/.*\.zip"
         z = find_on_page(self.download_url, ms)
         if z:
-            
             file_stream = requests.get(z, stream = True)
             
             print("Downloading %s" % z)
-            with open(target_file, 'wb') as f:
+            try:
+                target_file = tempfile.NamedTemporaryFile(delete=False)
                 for chunk in file_stream.iter_content(chunk_size = 1024):
                     if chunk:
-                        f.write(chunk)
-                        f.flush()
+                        target_file.write(chunk)
+                        target_file.flush()
+                target_file.close()
+            except:
+                print("Error downloading file to tempfile.")
+                self.zipfile = None
+                return False
 
             # objectify our file.
-            self.zipfile = zipfile.ZipFile(target_file)
+            #self.zipfile = zipfile.ZipFile(target_file)
+            self.zipfile = target_file
 
             return True
             
@@ -157,18 +164,23 @@ class Addon(object):
         Arguments:
         - `self`:
         """
-
-        if not self.zipfile:
+        zf = zipfile.ZipFile(self.zipfile.name)
+        if not zf:
             print("No zipfile!!!!")
             return False
 
         # TODO: try/except here, validation of file contents
         #  to prevent traversal exploits
-        for name in self.zipfile.namelist():
+        for name in zf.namelist():
             self.files.append(target_dir + name)
 
         print("Extracting zipfile to %s." % target_dir)
-        self.zipfile.extractall(target_dir)
+        zf.extractall(target_dir)
+
+        # clean up the tmp file.
+        print("Cleaning up tmpfile.")
+        zf.close()
+        
         return True
 
 

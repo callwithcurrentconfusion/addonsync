@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-#!PROJECT!addon-sync
+#!PROJECT!addonsync
 
 from manager import Manager
 import argparse

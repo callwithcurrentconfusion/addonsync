@@ -1,5 +1,6 @@
 ## addonsync ##
 ## syncronize wow addons from curse.com/wow based on URL ##
+#!PROJECT!addonsync
 
 import os
 import sqlite3 as db
