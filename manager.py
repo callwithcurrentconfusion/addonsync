@@ -29,6 +29,7 @@ from platform import system
 ## CHANGEME - This value controls where your addons will be installed.
 ## For linux users, edit appropriately
 addon_folder = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns/"
+addon_db = "/home/curtis/Code/Python/addonsync/addon.db"
 
 class Manager(object):
     """
@@ -49,14 +50,14 @@ class Manager(object):
         elif s == 'Windows':
             self.addons_dir = "C:\\Program Files (x86)\\World of Warcraft\\Interface\\AddOns\\"
         elif s == 'Darwin':
-            print("Ur a fagit!")
-            raise FagitExceptionError()
+            print("why?")
+            raise MacExceptionError()
 
         if not os.path.isdir(self.addons_dir):
             raise AddonFolderNotFound("Addon directory not found!")
 
         ## connect to DB
-        self.db = "/home/curtis/Code/Python/addonsync/addon.db"
+        self.db = addon_db
         self.conn = db.connect(self.db)
 
     def installAddon(self, addon):
@@ -213,7 +214,7 @@ class AddonFolderNotFound(Exception):
     def __str__(self):
         return repr(self.value)
 
-class FagitExceptionError(Exception):
+class MacExceptionError(Exception):
     """
     """
     
