@@ -18,6 +18,9 @@ from platform import system
 ## - configfile/prompt for wow-addon folder?
 ## - Verbose output
 ## - More information stored in DB (number of installs, date installed, date of update...)
+## - better looking output.
+## - windows EXE (py2exe)
+## - VERSION CHECKING FOR DIFFERENT LENGTH VERSIONS
 
 ## TESTING:
 ## - failure on invalid item name, bad url, no file, etc..

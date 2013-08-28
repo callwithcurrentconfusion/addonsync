@@ -54,6 +54,8 @@ def newer_version(available_version, current_version):
                 return True
             elif y > x:
                 return False
+            elif len[x] > len[y]:
+                return True
                 
         return False
     except:
