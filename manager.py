@@ -25,7 +25,7 @@ from platform import system
 
 ## CHANGEME - This value controls where your addons will be installed.
 ## For linux users, edit appropriately
-addon_folder = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns"
+addon_folder = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns/"
 
 class Manager(object):
     """
@@ -44,7 +44,7 @@ class Manager(object):
         elif s == 'Linux':
             self.addons_dir = addon_folder
         elif s == 'Windows':
-            self.addons_dir = "C:\Program Files (x86)\World of Warcraft\Interface\AddOns"
+            self.addons_dir = "C:\\Program Files (x86)\\World of Warcraft\\Interface\\AddOns\\"
         elif s == 'Darwin':
             print("Ur a fagit!")
             raise FagitExceptionError()
@@ -74,9 +74,8 @@ class Manager(object):
                                       (addon.name, ))
 
             if not addon.installed and not in_db.fetchone():
+
                 # add new
-                # TODO: better naming of tmp/zipfile (should end with .zip)
-                tmpfile = self.temp_dir + addon.name + ".zip"
                 if addon.getFile() and addon.unzipFile(self.addons_dir):
                     addon.newest_file = addon.updateAvailable()
                     with self.conn:
@@ -89,7 +88,6 @@ class Manager(object):
 
             else:
                 #update... assume new version number and files only
-                tmpfile = self.temp_dir + addon.name + ".zip"
                 if addon.getFile() and addon.unzipFile(self.addons_dir):
                     addon.newest_file = addon.updateAvailable()
                     with self.conn:
