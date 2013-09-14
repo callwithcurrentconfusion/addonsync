@@ -1,6 +1,11 @@
 ## addonsync ##
 ## syncronize wow addons from curse.com/wow based on URL ##
-#!PROJECT!addonsync
+
+
+## CHANGEME - This value controls where your addons will be installed.
+## For linux users, edit appropriately
+addon_folder = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns/"
+addon_db = "/home/curtis/Code/Python/addonsync/addon.db"
 
 import os
 import sqlite3 as db
@@ -11,7 +16,6 @@ from platform import system
 
 
 ## TODO:
-
 ## - Time-delay to prevent curse.com from detecting automation and blocking
 ## - cache for downloads (prevent too much downloading).
 ## - threading (help with net and file io bottlenecks).
@@ -19,17 +23,11 @@ from platform import system
 ## - Verbose output
 ## - More information stored in DB (number of installs, date installed, date of update...)
 ## - better looking output.
-## - windows EXE (py2exe)
-## - VERSION CHECKING FOR DIFFERENT LENGTH VERSIONS
+## - expand-user to remove hard-coded /home/curtis/..etc...
 
 ## TESTING:
 ## - failure on invalid item name, bad url, no file, etc..
 
-
-## CHANGEME - This value controls where your addons will be installed.
-## For linux users, edit appropriately
-addon_folder = "/home/curtis/.local/share/wineprefixes/wowtrial/drive_c/Program Files (x86)/World of Warcraft/Interface/AddOns/"
-addon_db = "/home/curtis/Code/Python/addonsync/addon.db"
 
 class Manager(object):
     """
@@ -60,6 +58,7 @@ class Manager(object):
         self.db = addon_db
         self.conn = db.connect(self.db)
 
+
     def installAddon(self, addon):
         """
         Download, and extract an addon into the addons folder.
@@ -81,7 +80,7 @@ class Manager(object):
 
                 # add new
                 if addon.getFile() and addon.unzipFile(self.addons_dir):
-                    addon.newest_file = addon.updateAvailable()
+                    addon.newest_file = addon.getNewestVersion()
                     with self.conn:
                         # print debugging
                         print("Adding record for %s." % addon.name)
@@ -93,7 +92,7 @@ class Manager(object):
             else:
                 #update... assume new version number and files only
                 if addon.getFile() and addon.unzipFile(self.addons_dir):
-                    addon.newest_file = addon.updateAvailable()
+                    addon.newest_file = addon.getNewestVersion()
                     with self.conn:
                         # print debugging
                         print("Updating record for %s." % addon.name)
@@ -122,9 +121,11 @@ class Manager(object):
                 # still use the version fetched by this function
                 # to record.
 
-                available_version = addon.updateAvailable()
-                if available_version and addon.installed:
-                    addon.newest_file = available_version
+                update_available = addon.updateAvailable()
+                if update_available and addon.installed:
+
+                    # TODO: fix this. shouldn't need to check for the version twice in one fuction
+                    addon.newest_file = addon.getNewestVersion()
                     print("Upate available, installing %s." % addon.name)
                     self.installAddon(addon)
                     
@@ -198,7 +199,6 @@ class Manager(object):
             with self.conn:
                 self.conn.execute("UPDATE addons SET downloaded=?,files=? WHERE name=?;",\
                                       (False, json.dumps([]), addon.name, ))
-
 
     
 

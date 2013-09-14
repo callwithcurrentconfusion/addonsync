@@ -1,10 +1,25 @@
-#!PROJECT!addonsync
-
 import requests
 import re
 import zipfile
 import json
 import tempfile
+
+def prompt_for_update(message):
+    """
+    
+    Arguments:
+    - `message`: (String) notice to paste to user.
+    """
+
+    while True:
+        s = raw_input(message).upper()
+        if s == "Y" or s == "YES":
+            return True
+        elif s == "N" or s == "NO":
+            return False
+        else:
+            print("Please enter (y)es or (n)o.")
+
 
 def find_on_page(url, ms):
     """
@@ -14,7 +29,7 @@ def find_on_page(url, ms):
     If none are found, return False.
     
     Arguments:
-    - `url`:
+    - `url`: (String) the URL of the addon page
     """
     
     # ms = "http://addons\.curse\.cursecdn\.com/files/.*\.zip"
@@ -29,9 +44,10 @@ def find_on_page(url, ms):
 def newer_version(available_version, current_version):
     """
     Compare two version, keeping in mind the current version might be None.
-    Arguments:
-    - `available_version`:
-    - `current_version`:
+    Returns a boolean value.
+    
+    - `available_version`: (String) 
+    - `current_version`: (String)
     """
 
     # if we have a valid available_version, but no current_version
@@ -40,6 +56,9 @@ def newer_version(available_version, current_version):
         return True
 
     try:
+        print("Comparing installed verion %s and available version %s"\
+              % (current_version, available_version))
+        
         # some version will not use a dot convention.
         available_modes = available_version.split(".")
         current_modes = current_version.split(".")
@@ -58,12 +77,10 @@ def newer_version(available_version, current_version):
                 return True
                 
         return False
+        
     except:
-        print("Unable to compare versions intelligentlly")
-        print("Manually update?")
-        # TODO Prompt here
-        print("Defaulting to bad logic guess.")
-        return available_version > current_version
+        print("WARNING: Unable to compare versions automatically.")
+        return prompt_for_update("Manually update? y\n:> ")
     
 
 
@@ -88,6 +105,25 @@ class Addon(object):
         self.download_url = self.url + "download/"
 
         self.zipfile = None
+
+    def getNewestVersion(self):
+        """
+        Return the newest file version, if possible.
+        Return False if not.
+    
+        Arguments:
+        - `self`:
+        """
+        
+        print("Checking for updates to %s" % self.name)
+        
+        ms = "Newest File: ([0-9\.]+)"
+        available_version = find_on_page(self.url, ms)
+
+        if available_version:
+            return available_version
+        else:
+            return False
         
         
     def updateAvailable(self):
@@ -103,22 +139,22 @@ class Addon(object):
         Arguments:
         - `self`:
         """
-        
-        print("Checking for updates to %s" % self.name)
-        
-        ms = "Newest File: ([0-9\.]+)"
-        available_version = find_on_page(self.url, ms)
 
+        available_version = self.getNewestVersion()
+      
         if available_version:
             if newer_version(available_version, self.newest_file):
                 print("Current available version of %s: %s." % (self.name, available_version))
+                print("Update available!")
                 return available_version
             else:
                 return False
-                                
+    
         else:
+            # if we're unable to parse for a version, prompt for manual imput
             print("Unable to find newest file listed for %s" % self.name)
-            return False
+            response = prompt_for_update("Update? y/n:> ")
+            return response
 
 
     def getFile(self):
