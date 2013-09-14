@@ -55,6 +55,11 @@ def newer_version(available_version, current_version):
     if available_version and not current_version:
         return True
 
+    # if the versions are identical, return false
+    if available_version == current_version:
+        return False
+
+    # if the versions aren't exactly the same, try and compare them
     try:
         print("Comparing installed verion %s and available version %s"\
               % (current_version, available_version))
